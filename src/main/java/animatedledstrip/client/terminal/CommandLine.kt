@@ -12,6 +12,7 @@ import com.googlecode.lanterna.input.KeyType
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import com.googlecode.lanterna.terminal.Terminal
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.kotlin.com.intellij.util.containers.Stack
 import org.pmw.tinylog.Configurator
 import org.pmw.tinylog.Level
 
@@ -27,10 +28,15 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
 
     private var inputStr = ""
 
+    private val inputHistory = Stack<String>()
+    private val inputFuture = Stack<String>()
+
+    private var onHistory = false
+
     private var printLine = 0
 
     init {
-        Configurator.defaultConfig().level(Level.DEBUG).activate()
+        Configurator.defaultConfig().level(Level.INFO).activate()
     }
 
     private fun Terminal.clearLine(line: Int) {
@@ -48,6 +54,10 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
         clearLine(terminalSize.rows)
         resetCursor()
         flush()
+    }
+
+    private fun Terminal.putString(str: String) {
+        str.forEach { putCharacter(it) }
     }
 
     private fun println(message: String) {
@@ -99,6 +109,8 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
                 val key = terminal.pollInput() ?: continue@read
                 when (key.keyType) {
                     KeyType.Enter -> {
+                        while (inputFuture.isNotEmpty()) inputHistory.push(inputFuture.pop())
+                        inputHistory.push(inputStr)
                         terminal.clearInput()
                         break@read
                     }
@@ -116,6 +128,38 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
                         terminal.resetCursor()
                         terminal.flush()
                         continue@read
+                    }
+                    KeyType.ArrowDown -> {
+                        when {
+                            inputFuture.isNotEmpty() -> {
+                                if (inputStr.isNotEmpty()) inputHistory.push(inputStr)
+                                inputStr = ""
+                                terminal.clearInput()
+                                inputStr = inputFuture.pop()
+                                terminal.putString(inputStr)
+                                terminal.resetCursor()
+                                terminal.flush()
+                            }
+                            onHistory -> {
+                                onHistory = false
+                                inputHistory.push(inputStr)
+                                inputStr = ""
+                                terminal.clearInput()
+                                terminal.flush()
+                            }
+                            else -> {}
+                        }
+                    }
+                    KeyType.ArrowUp -> {
+                        if (inputHistory.isNotEmpty()) {
+                            if (onHistory) inputFuture.push(inputStr)
+                            inputStr = ""
+                            terminal.clearInput()
+                            inputStr = inputHistory.pop()
+                            terminal.putString(inputStr)
+                            onHistory = true
+                            terminal.flush()
+                        }
                     }
                 }
             }
