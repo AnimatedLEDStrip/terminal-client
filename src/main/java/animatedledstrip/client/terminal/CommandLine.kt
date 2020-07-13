@@ -87,6 +87,13 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
 
     fun start() = runBlocking {
         terminal = DefaultTerminalFactory().createTerminal()
+        terminal.enterPrivateMode()
+        terminal.addResizeListener { terminal, terminalSize ->
+            terminal.clearLine(terminal.cursorPosition.row)
+            terminal.setCursorPosition(0, terminalSize.rows)
+            terminal.putString(inputStr)
+            terminal.flush()
+        }
         textGraphics = terminal.newTextGraphics()
 
         println("Welcome to the AnimatedLEDStrip Server console")
@@ -190,6 +197,7 @@ class CommandLine(port: Int, private val quiet: Boolean = false) {
 
             inputStr = ""
         }
+        terminal.exitPrivateMode()
     }
 
     private fun printFormattedData(data: String) {
