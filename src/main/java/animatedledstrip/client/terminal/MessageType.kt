@@ -22,13 +22,11 @@
 
 package animatedledstrip.client.terminal
 
-import org.pmw.tinylog.Configurator
-import org.pmw.tinylog.Level
-
-fun main(args: Array<String>) {
-    Configurator.defaultConfig().level(Level.OFF).activate()
-
-    val cmdLine = CommandLine(1118)
-
-    cmdLine.start()
+enum class MessageType {
+    NORMAL,
+    NORMAL_BOLD,
+    COMMAND,
+    CONNECTION,
+    TERMINAL_MESSAGE,
+    TERMINAL_MESSAGE_BOLD
 }

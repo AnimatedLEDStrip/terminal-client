@@ -1,0 +1,45 @@
+---
+language: java
+
+cache:
+  directories:
+    - $HOME/.m2
+
+stages:
+  - name: deploy
+    if: tag IS present
+
+jobs:
+  include:
+    - stage: deploy
+      install: skip
+      script: skip
+      before_deploy:
+        - VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2> /dev/null)
+      deploy:
+        - provider: script
+          script: mvn package -B
+          on:
+            tags: true
+        - provider: releases
+          api_key: $GITHUB_TOKEN
+          file: target/animatedledstrip-terminal-client-${VERSION}.jar
+          skip_cleanup: true
+          overwrite: true
+          on:
+            tags: true
+    - stage: deploy
+      install: skip
+      script: skip
+      before_deploy:
+        - git clone https://github.com/AnimatedLEDStrip/animatedledstrip.github.io.git
+        - cd animatedledstrip.github.io
+        - cp ../install-pi-server.sh install/install-terminal.sh
+        - git add install/install-terminal.sh
+        - git commit -m "Update install-terminal.sh"
+      deploy:
+        - provider: script
+          script:  git push -u https://maxnz:$GITHUB_TOKEN@github.com/AnimatedLEDStrip/animatedledstrip.github.io.git master
+          skip_cleanup: true
+          on:
+            tags: true
