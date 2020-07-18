@@ -36,7 +36,7 @@ jobs:
         - cd animatedledstrip.github.io
         - cp ../install-terminal.sh install/install-terminal.sh
         - git add install/install-terminal.sh
-        - git commit -m "Update install-terminal.sh"
+        - git commit --allow-empty -m "Update install-terminal.sh"
       deploy:
         - provider: script
           script:  git push -u https://maxnz:$GITHUB_TOKEN@github.com/AnimatedLEDStrip/animatedledstrip.github.io.git master
