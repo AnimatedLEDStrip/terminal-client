@@ -176,15 +176,15 @@ class CommandLine(port: Int) {
             .setOnReceiveCallback {
                 printFormattedData(it)
             }
-            .setOnConnectCallback {
-                println("Connected to $it", MessageType.CONNECTION)
+            .setOnConnectCallback { ip, port ->
+                println("Connected to $ip:$port", MessageType.CONNECTION)
             }
-            .setOnDisconnectCallback {
-                println("Disconnected from $it", MessageType.CONNECTION)
+            .setOnDisconnectCallback { ip, port ->
+                println("Disconnected from $ip:$port", MessageType.CONNECTION)
                 showAnimationInfos = false
             }
-            .setOnUnableToConnectCallback {
-                println("Could not connect to $it", MessageType.CONNECTION)
+            .setOnUnableToConnectCallback { ip, port ->
+                println("Could not connect to $ip:$port", MessageType.CONNECTION)
             }
 
         val parser = CommandParser<CommandLine, Unit>(this@CommandLine)
